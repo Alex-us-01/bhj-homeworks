@@ -1,64 +1,40 @@
-let activeTooltip = null;
+document.addEventListener("DOMContentLoaded", () => {
+  const hasTooltipElements = document.querySelectorAll(".has-tooltip");
 
-document.addEventListener('click', function(e) {
-    let target = e.target;
-    let tooltip = target.getAttribute('title');
-    let position = target.dataset.position;
+  let activeTooltip = null;
 
-    if (!target.classList.contains('has-tooltip')) return false;
+  hasTooltipElements.forEach((element) => {
+    element.addEventListener("click", (event) => {
+      event.preventDefault();
 
-    if (activeTooltip !== null && activeTooltip.innerText === tooltip) {
-        activeTooltip.remove(); 
-        activeTooltip = null;
-        e.preventDefault();
-
-        return false;
-    } else if (activeTooltip !== null) {
+      if (activeTooltip) {
         activeTooltip.remove();
-    } 
+        activeTooltip = null;
+      }
 
-    let tooltipDiv = document.createElement('div');
-    tooltipDiv.className = 'tooltip';
-    tooltipDiv.innerText = tooltip;
-    document.body.insertBefore(tooltipDiv, target);
-    tooltipDiv.classList.add('tooltip_active');
+      if (activeTooltip && activeTooltip.dataset.target === element) {
+        return;
+      }
 
-    let coords = target.getBoundingClientRect();
-    let top = coords.top - tooltipDiv.offsetHeight - 5;
-    let left = coords.left + (target.offsetWidth - tooltipDiv.offsetWidth) / 2;
+      const tooltip = document.createElement("div");
+      tooltip.className = "tooltip tooltip_active";
+      tooltip.textContent = element.title;
 
-    if (position !== undefined) {
-        if (position === 'right') {
-            top = coords.top - 5;
-            left = coords.left + target.offsetWidth + 5;
+      const { top, left, height } = element.getBoundingClientRect();
+      tooltip.style.position = "absolute";
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top + height + 5}px`; 
 
-            if (left > window.innerWidth - tooltipDiv.offsetWidth) {
-                top = coords.top - tooltipDiv.offsetHeight - 5;
-                left = coords.left + (target.offsetWidth - tooltipDiv.offsetWidth) / 2;
-            }
-        } else if (position === 'left') {
-            top = coords.top - 5;
-            left = coords.left - tooltipDiv.offsetWidth - 5;
-            
-            if (left < 0) {
-                top = coords.top + tooltipDiv.offsetHeight - 5;
-            }
-        } else if (position === 'bottom') {
-            top = coords.top + tooltipDiv.offsetHeight;
-            
-            if (top > window.innerHeight - tooltipDiv.offsetHeight) {
-                top = coords.top - tooltipDiv.offsetHeight - 5;
-            }
-        }
+      document.body.appendChild(tooltip);
+
+      activeTooltip = tooltip;
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (activeTooltip && !event.target.closest(".has-tooltip")) {
+      activeTooltip.remove();
+      activeTooltip = null;
     }
-
-    if (top < 0) top = coords.top + tooltipDiv.offsetHeight;
-    if (left < 0) left = coords.left;
-
-    tooltipDiv.style.top = top + 'px';
-    tooltipDiv.style.left = left + 'px';
-
-    activeTooltip = document.querySelector('.tooltip');
-
-    e.preventDefault();
+  });
 });
